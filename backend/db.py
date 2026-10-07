@@ -18,21 +18,24 @@ def get_db():
 def init_db():
     """Create database and tables if they don't exist, seed initial data."""
     try:
-        # 1) Create the database
-        conn = pymysql.connect(
-            host=DB_HOST,
-            port=DB_PORT,
-            user=DB_USER,
-            password=DB_PASS,
-            charset='utf8mb4'
-        )
-        with conn.cursor() as cur:
-            cur.execute(
-                "CREATE DATABASE IF NOT EXISTS `%s` "
-                "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci" % DB_NAME
+        try:
+            # 1) Create the database (Ignore errors if not allowed)
+            conn = pymysql.connect(
+                host=DB_HOST,
+                port=DB_PORT,
+                user=DB_USER,
+                password=DB_PASS,
+                charset='utf8mb4'
             )
-        conn.commit()
-        conn.close()
+            with conn.cursor() as cur:
+                cur.execute(
+                    "CREATE DATABASE IF NOT EXISTS `%s` "
+                    "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci" % DB_NAME
+                )
+            conn.commit()
+            conn.close()
+        except Exception as db_err:
+            print(f"⚠️ Could not create database (might already exist or permission denied): {db_err}")
 
         # 2) Create tables
         conn = get_db()
@@ -88,3 +91,4 @@ def init_db():
         print("✅ Database initialized successfully!")
     except Exception as e:
         print(f"❌ Failed to initialize database: {e}")
+        raise e
