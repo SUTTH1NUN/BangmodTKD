@@ -6,10 +6,32 @@ function WeightTab({ athletes, setAthletes, role, filterUI, fetchData }) {
         setAthletes(athletes.map(a => a.id === id ? { ...a, weight: newWeight } : a));
     };
 
+    React.useEffect(() => {
+        const fetchTodayAttendance = async () => {
+            try {
+                const today = new Date();
+                const offset = today.getTimezoneOffset() * 60000;
+                const localISOTime = (new Date(today - offset)).toISOString().split('T')[0];
+                
+                const res = await fetch(`/api/attendance?date=${localISOTime}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setAthletes(prevAthletes => prevAthletes.map(a => {
+                        const record = data.find(r => r.person_type === 'athlete' && r.person_id === a.id);
+                        return { ...a, present: record ? record.present : false };
+                    }));
+                }
+            } catch (err) {
+                console.error("Failed to fetch attendance:", err);
+            }
+        };
+        fetchTodayAttendance();
+    }, [setAthletes]);
+
     const handleSaveWeight = async () => {
         try {
             // Update all visible athletes
-            await Promise.all(athletes.filter(a => role === 'parent' || a.present).map(a => 
+            await Promise.all(athletes.filter(a => a.present).map(a => 
                 fetch(`/api/athletes/${a.id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -57,7 +79,7 @@ function WeightTab({ athletes, setAthletes, role, filterUI, fetchData }) {
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-100">
-                            {athletes.filter(a => role === 'parent' || a.present).map(athlete => (
+                            {athletes.filter(a => a.present).map(athlete => (
                                 <tr key={athlete.id} className="hover:bg-tkd-50 transition-colors">
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center">
@@ -87,10 +109,10 @@ function WeightTab({ athletes, setAthletes, role, filterUI, fetchData }) {
                                     </td>
                                 </tr>
                             ))}
-                            {athletes.filter(a => role === 'parent' || a.present).length === 0 && (
+                            {athletes.filter(a => a.present).length === 0 && (
                                 <tr>
                                     <td colSpan="2" className="px-6 py-8 text-center text-gray-500">
-                                        {role === 'parent' ? 'ยังไม่มีรายชื่อนักกีฬาของคุณ' : 'ยังไม่มีนักกีฬาที่เช็คชื่อในรอบนี้'}
+                                        ยังไม่มีนักกีฬาที่เช็คชื่อในรอบนี้
                                     </td>
                                 </tr>
                             )}
