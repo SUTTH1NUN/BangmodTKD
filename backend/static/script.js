@@ -19,12 +19,18 @@ function App() {
             
             if (athletesRes.ok) {
                 const data = await athletesRes.json();
-                // Add default present=false state for UI
-                setAthletes(data.map(a => ({...a, present: false})));
+                // Add default present=false state for UI, but preserve existing state if any
+                setAthletes(prev => data.map(newA => {
+                    const existing = prev.find(a => a.id === newA.id);
+                    return { ...newA, present: existing ? existing.present : false };
+                }));
             }
             if (instructorsRes.ok) {
                 const data = await instructorsRes.json();
-                setInstructors(data.map(i => ({...i, present: false})));
+                setInstructors(prev => data.map(newI => {
+                    const existing = prev.find(i => i.id === newI.id);
+                    return { ...newI, present: existing ? existing.present : false };
+                }));
             }
         } catch (error) {
             console.error("Failed to fetch data:", error);
