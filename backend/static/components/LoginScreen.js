@@ -18,7 +18,7 @@ function LoginScreen({ onLogin, athletes }) {
             } else if (username === 'admin' && password === 'admin') {
                 onLogin('admin', [], rememberMe);
             } else {
-                setErrorMsg('Username หรือ Password ไม่ถูกต้อง (ใช้ admin / admin)');
+                setErrorMsg('Username หรือ Password ไม่ถูกต้อง');
             }
         } else {
             if (selectedAthleteIds.length > 0) {
