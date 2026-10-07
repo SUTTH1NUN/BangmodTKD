@@ -50,8 +50,8 @@ def save_attendance():
                 cur.execute(
                     "INSERT INTO attendance (person_id, person_type, date, present) "
                     "VALUES (%s, %s, %s, %s) "
-                    "ON DUPLICATE KEY UPDATE present=%s",
-                    (r['id'], r['type'], date_str, r['present'], r['present'])
+                    "ON CONFLICT (person_id, person_type, date) DO UPDATE SET present=EXCLUDED.present",
+                    (r['id'], r['type'], date_str, r['present'])
                 )
             conn.commit()
 
@@ -77,7 +77,7 @@ def get_monthly_attendance():
             cur.execute(
                 "SELECT person_id AS id, COUNT(*) AS count "
                 "FROM attendance "
-                "WHERE person_type='athlete' AND present=1 AND DATE_FORMAT(date, '%%Y-%%m')=%s "
+                "WHERE person_type='athlete' AND present=TRUE AND TO_CHAR(date, 'YYYY-MM')=%s "
                 "GROUP BY person_id",
                 (month_str,)
             )
@@ -87,7 +87,7 @@ def get_monthly_attendance():
             cur.execute(
                 "SELECT person_id AS id, COUNT(*) AS count "
                 "FROM attendance "
-                "WHERE person_type='instructor' AND present=1 AND DATE_FORMAT(date, '%%Y-%%m')=%s "
+                "WHERE person_type='instructor' AND present=TRUE AND TO_CHAR(date, 'YYYY-MM')=%s "
                 "GROUP BY person_id",
                 (month_str,)
             )

@@ -16,7 +16,7 @@ def list_instructors():
             for row in rows:
                 cur.execute(
                     "SELECT COUNT(*) AS cnt FROM attendance "
-                    "WHERE person_id=%s AND person_type='instructor' AND present=1",
+                    "WHERE person_id=%s AND person_type='instructor' AND present=TRUE",
                     (row['id'],)
                 )
                 instructors.append({
@@ -40,9 +40,9 @@ def add_instructor():
     conn = get_db()
     try:
         with conn.cursor() as cur:
-            cur.execute("INSERT INTO instructors (name) VALUES (%s)", (name,))
+            cur.execute("INSERT INTO instructors (name) VALUES (%s) RETURNING id", (name,))
+            new_id = cur.fetchone()['id']
             conn.commit()
-            new_id = cur.lastrowid
 
         return jsonify({"id": new_id, "name": name, "attendanceCount": 0}), 201
     finally:

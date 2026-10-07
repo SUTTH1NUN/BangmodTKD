@@ -42,7 +42,7 @@ def list_athletes():
                 a = _row_to_json(row)
                 cur.execute(
                     "SELECT COUNT(*) AS cnt FROM attendance "
-                    "WHERE person_id=%s AND person_type='athlete' AND present=1",
+                    "WHERE person_id=%s AND person_type='athlete' AND present=TRUE",
                     (row['id'],)
                 )
                 a['attendanceCount'] = cur.fetchone()['cnt']
@@ -61,7 +61,7 @@ def add_athlete():
         with conn.cursor() as cur:
             cur.execute(
                 "INSERT INTO athletes (nickname, full_name, belt_color, birth_date, class_type, weight) "
-                "VALUES (%s, %s, %s, %s, %s, %s)",
+                "VALUES (%s, %s, %s, %s, %s, %s) RETURNING id",
                 (
                     data.get('nickname', ''),
                     data.get('fullName', ''),
@@ -71,8 +71,8 @@ def add_athlete():
                     data.get('weight', ''),
                 )
             )
+            new_id = cur.fetchone()['id']
             conn.commit()
-            new_id = cur.lastrowid
             cur.execute("SELECT * FROM athletes WHERE id=%s", (new_id,))
             row = cur.fetchone()
 
