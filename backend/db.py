@@ -12,7 +12,7 @@ def get_db():
 
 
 def init_db():
-    """Create tables if they don't exist, seed initial data."""
+    """Create tables if they don't exist."""
     try:
         # Create tables
         conn = get_db()
@@ -47,21 +47,7 @@ def init_db():
                 )
             """)
 
-            # Seed mock data if tables are empty
-            cur.execute("SELECT COUNT(*) AS cnt FROM athletes")
-            if cur.fetchone()['cnt'] == 0:
-                cur.execute("""
-                    INSERT INTO athletes (nickname, full_name, belt_color, birth_date, class_type, weight)
-                    VALUES
-                        ('Nong', 'Nong Somchai', 'Yellow', '2018-05-12', 'รอบปกติ', '25.5'),
-                        ('Fah',  'Fah Sai',     'Green',  '2016-10-22', 'รอบนักกีฬา', '30.2'),
-                        ('Bank', '',             'White',  '2020-01-05', 'รอบปกติ', '20.0'),
-                        ('Ploy', 'Ploy Pailin',  'Blue',   '2014-08-15', 'รอบนักกีฬา', '42.1')
-                """)
 
-            cur.execute("SELECT COUNT(*) AS cnt FROM instructors")
-            if cur.fetchone()['cnt'] == 0:
-                cur.execute("INSERT INTO instructors (name) VALUES ('ครูปูเป้'), ('ครูมิน')")
 
         conn.commit()
         conn.close()
