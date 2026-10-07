@@ -51,7 +51,7 @@ def save_attendance():
                     "INSERT INTO attendance (person_id, person_type, date, present) "
                     "VALUES (%s, %s, %s, %s) "
                     "ON CONFLICT (person_id, person_type, date) DO UPDATE SET present=EXCLUDED.present",
-                    (r['id'], r['type'], date_str, r['present'])
+                    (r['id'], r['type'], date_str, bool(r['present']))
                 )
             conn.commit()
 
