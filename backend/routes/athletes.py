@@ -120,3 +120,57 @@ def delete_athlete(athlete_id):
         return jsonify({"message": "Deleted"}), 200
     finally:
         conn.close()
+
+@athletes_bp.route('/api/weights', methods=['GET'])
+def get_weights():
+    date_str = request.args.get('date')
+    if not date_str:
+        return jsonify({"error": "date is required"}), 400
+    
+    conn = get_db()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT athlete_id, weight FROM weight_history WHERE date=%s", (date_str,))
+            rows = cur.fetchall()
+            return jsonify(rows)
+    finally:
+        conn.close()
+
+@athletes_bp.route('/api/weights', methods=['PUT'])
+def update_weights():
+    data = request.json
+    date_str = data.get('date')
+    records = data.get('records', [])
+    
+    conn = get_db()
+    try:
+        with conn.cursor() as cur:
+            for r in records:
+                cur.execute("""
+                    INSERT INTO weight_history (athlete_id, date, weight) 
+                    VALUES (%s, %s, %s)
+                    ON CONFLICT (athlete_id, date) 
+                    DO UPDATE SET weight = EXCLUDED.weight
+                """, (r['id'], date_str, r['weight']))
+            conn.commit()
+        return jsonify({"message": "Saved weights"}), 200
+    finally:
+        conn.close()
+
+@athletes_bp.route('/api/athletes/<int:athlete_id>/weights', methods=['GET'])
+def get_athlete_weight_history(athlete_id):
+    conn = get_db()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT date, weight FROM weight_history WHERE athlete_id=%s ORDER BY date ASC",
+                (athlete_id,)
+            )
+            rows = cur.fetchall()
+            # Convert date objects to strings for JSON
+            history = [{"date": r['date'].strftime('%Y-%m-%d'), "weight": r['weight']} for r in rows]
+            return jsonify(history)
+    finally:
+        conn.close()
+
+

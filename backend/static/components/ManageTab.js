@@ -19,30 +19,37 @@ function ManageTab({ athletes, setAthletes, instructors, filterUI, fetchData }) 
 
     const [showInstructorModal, setShowInstructorModal] = useState(false);
 
+    const getLevelsForColor = (color) => {
+        if (color === 'Red') return ['1', '2', '3'];
+        if (color === 'Black') return ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+        return ['1', '2'];
+    };
+
     const [formData, setFormData] = useState({
         nickname: '',
         fullName: '',
         beltColor: 'White',
+        beltLevel: '1',
         birthDate: '',
         classType: 'รอบปกติ'
     });
 
-    const [instructorForm, setInstructorForm] = useState({ name: '' });
+    const [instructorForm, setInstructorForm] = useState({ nickname: '', fullName: '', username: '', password: '' });
 
     const handleInstructorSubmit = async (e) => {
         e.preventDefault();
-        if (!instructorForm.name) return;
+        if (!instructorForm.nickname || !instructorForm.username || !instructorForm.password) return;
         
         try {
             const res = await fetch('/api/instructors', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: instructorForm.name })
+                body: JSON.stringify(instructorForm)
             });
             if (res.ok) {
                 if (fetchData) fetchData();
                 setShowInstructorModal(false);
-                setInstructorForm({ name: '' });
+                setInstructorForm({ nickname: '', fullName: '', username: '', password: '' });
                 alert('เพิ่มผู้ฝึกสอนสำเร็จ!');
             } else {
                 alert('ไม่สามารถเพิ่มผู้ฝึกสอนได้');
@@ -54,17 +61,29 @@ function ManageTab({ athletes, setAthletes, instructors, filterUI, fetchData }) 
 
     const openAddModal = () => {
         setIsEditing(false);
-        setFormData({ nickname: '', fullName: '', beltColor: 'White', birthDate: '', classType: 'รอบปกติ' });
+        setFormData({ nickname: '', fullName: '', beltColor: 'White', beltLevel: '1', birthDate: '', classType: 'รอบปกติ' });
         setShowModal(true);
     };
 
     const openEditModal = (athlete) => {
         setIsEditing(true);
         setCurrentAthlete(athlete);
+        
+        let bColor = 'White';
+        let bLevel = '1';
+        if (athlete.beltColor) {
+            const parts = athlete.beltColor.split(' ');
+            bColor = parts[0];
+            if (parts.length > 1) {
+                bLevel = parts[1];
+            }
+        }
+
         setFormData({
             nickname: athlete.nickname,
             fullName: athlete.fullName || '',
-            beltColor: athlete.beltColor,
+            beltColor: bColor,
+            beltLevel: bLevel,
             birthDate: athlete.birthDate || '',
             classType: athlete.classType || 'รอบปกติ'
         });
@@ -111,17 +130,20 @@ function ManageTab({ athletes, setAthletes, instructors, filterUI, fetchData }) 
 
         try {
             let res;
+            const submitData = { ...formData, beltColor: `${formData.beltColor} ${formData.beltLevel}` };
+            delete submitData.beltLevel;
+
             if (isEditing && currentAthlete) {
                 res = await fetch(`/api/athletes/${currentAthlete.id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify(submitData)
                 });
             } else {
                 res = await fetch('/api/athletes', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify(submitData)
                 });
             }
 
@@ -174,7 +196,8 @@ function ManageTab({ athletes, setAthletes, instructors, filterUI, fetchData }) 
                                 <i className="fa-solid fa-user-tie"></i>
                             </div>
                             <div>
-                                <h3 className="font-bold text-lg text-gray-800">{instructor.name}</h3>
+                                <h3 className="font-bold text-lg text-gray-800">{instructor.nickname}</h3>
+                                {instructor.fullName && <p className="text-xs text-gray-500">{instructor.fullName}</p>}
                             </div>
                         </div>
                         <button 
@@ -191,7 +214,7 @@ function ManageTab({ athletes, setAthletes, instructors, filterUI, fetchData }) 
                 <h3 className="text-xl font-bold text-gray-800 border-b pb-2">รายชื่อนักกีฬา</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {athletes.map(athlete => (
+                {athletes.slice().sort((a,b) => getBeltScore(b.beltColor) - getBeltScore(a.beltColor)).map(athlete => (
                     <div key={athlete.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 athlete-card flex flex-col justify-between">
                         <div className="flex items-start justify-between">
                             <div className="flex items-center gap-3">
@@ -273,15 +296,6 @@ function ManageTab({ athletes, setAthletes, instructors, filterUI, fetchData }) 
                             
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1">วดป. เกิด</label>
-                                    <input 
-                                        type="date" 
-                                        value={formData.birthDate}
-                                        onChange={e => setFormData({...formData, birthDate: e.target.value})}
-                                        className="w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 focus:border-tkd-500 focus:ring-0 transition-colors bg-white/80"
-                                    />
-                                </div>
-                                <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-1">รอบการเรียน</label>
                                     <select 
                                         value={formData.classType}
@@ -296,11 +310,29 @@ function ManageTab({ athletes, setAthletes, instructors, filterUI, fetchData }) 
                                     <label className="block text-sm font-semibold text-gray-700 mb-1">สายคาดเอว</label>
                                     <select 
                                         value={formData.beltColor}
-                                        onChange={e => setFormData({...formData, beltColor: e.target.value})}
+                                        onChange={e => {
+                                            const newColor = e.target.value;
+                                            const allowedLevels = getLevelsForColor(newColor);
+                                            let newLevel = formData.beltLevel;
+                                            if (!allowedLevels.includes(newLevel)) newLevel = '1';
+                                            setFormData({...formData, beltColor: newColor, beltLevel: newLevel});
+                                        }}
                                         className="w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 focus:border-tkd-500 focus:ring-0 transition-colors bg-white"
                                     >
                                         {beltColors.map(color => (
                                             <option key={color} value={color}>{color}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">ขั้น/ดั้ง</label>
+                                    <select 
+                                        value={formData.beltLevel}
+                                        onChange={e => setFormData({...formData, beltLevel: e.target.value})}
+                                        className="w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 focus:border-tkd-500 focus:ring-0 transition-colors bg-white"
+                                    >
+                                        {getLevelsForColor(formData.beltColor).map(level => (
+                                            <option key={level} value={level}>{level}</option>
                                         ))}
                                     </select>
                                 </div>
@@ -336,13 +368,48 @@ function ManageTab({ athletes, setAthletes, instructors, filterUI, fetchData }) 
                         
                         <form onSubmit={handleInstructorSubmit} className="p-6 space-y-4">
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">ชื่อเรียก / ชื่อเล่น (เช่น ครูปูเป้) <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">ชื่อเล่น <span className="text-red-500">*</span></label>
                                 <input 
                                     type="text" 
-                                    value={instructorForm.name}
-                                    onChange={(e) => setInstructorForm({...instructorForm, name: e.target.value})}
+                                    value={instructorForm.nickname}
+                                    onChange={(e) => setInstructorForm({...instructorForm, nickname: e.target.value})}
                                     className="w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 focus:border-tkd-500 focus:ring-0 transition-colors"
-                                    placeholder="กรอกชื่อเรียกสำหรับแสดงในระบบ"
+                                    placeholder="เช่น ครูปูเป้"
+                                    required
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">ชื่อจริง (ไม่บังคับ)</label>
+                                <input 
+                                    type="text" 
+                                    value={instructorForm.fullName}
+                                    onChange={(e) => setInstructorForm({...instructorForm, fullName: e.target.value})}
+                                    className="w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 focus:border-tkd-500 focus:ring-0 transition-colors"
+                                    placeholder="กรอกชื่อจริง"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">Username <span className="text-red-500">*</span></label>
+                                <input 
+                                    type="text" 
+                                    value={instructorForm.username}
+                                    onChange={(e) => setInstructorForm({...instructorForm, username: e.target.value})}
+                                    className="w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 focus:border-tkd-500 focus:ring-0 transition-colors"
+                                    placeholder="ชื่อผู้ใช้สำหรับเข้าระบบ"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">Password <span className="text-red-500">*</span></label>
+                                <input 
+                                    type="password" 
+                                    value={instructorForm.password}
+                                    onChange={(e) => setInstructorForm({...instructorForm, password: e.target.value})}
+                                    className="w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 focus:border-tkd-500 focus:ring-0 transition-colors"
+                                    placeholder="รหัสผ่าน"
                                     required
                                 />
                             </div>

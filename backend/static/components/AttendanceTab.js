@@ -2,7 +2,7 @@
 // ATTENDANCE TAB
 // ----------------------------------------------------
 function AttendanceTab({ athletes, setAthletes, filterUI, instructors, setInstructors, fetchData }) {
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [selectedDate, setSelectedDate] = useState(getLocalDateString());
 
     useEffect(() => {
         const fetchDaily = async () => {
@@ -70,7 +70,7 @@ function AttendanceTab({ athletes, setAthletes, filterUI, instructors, setInstru
         }
     };
 
-    const sortedAthletes = [...athletes].sort((a, b) => (b.attendanceCount || 0) - (a.attendanceCount || 0));
+    const sortedAthletes = [...athletes].sort((a, b) => getBeltScore(b.beltColor) - getBeltScore(a.beltColor));
 
     return (
         <div className="space-y-6">
@@ -125,7 +125,7 @@ function AttendanceTab({ athletes, setAthletes, filterUI, instructors, setInstru
                                 </div>
                                 <div>
                                     <div className={`font-bold ${instructor.present ? 'text-tkd-800' : 'text-gray-600'}`}>
-                                        {instructor.name}
+                                        {instructor.nickname}
                                     </div>
                                 </div>
                                 <div className="ml-2">

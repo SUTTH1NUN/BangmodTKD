@@ -1,7 +1,7 @@
 // ----------------------------------------------------
 // MAIN APP (DASHBOARD)
 // ----------------------------------------------------
-function MainApp({ role, parentAthletes, athletes, setAthletes, instructors, setInstructors, onLogout, onSave, fetchData }) {
+function MainApp({ role, userName, parentAthletes, athletes, setAthletes, instructors, setInstructors, onLogout, onSave, fetchData }) {
     const [activeTab, setActiveTab] = useState(role === 'parent' ? 'weight' : 'attendance');
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [filterType, setFilterType] = useState('ทั้งหมด');
@@ -15,15 +15,18 @@ function MainApp({ role, parentAthletes, athletes, setAthletes, instructors, set
 
     const filteredNavItems = navItems.filter(item => item.roles.includes(role));
 
-    let displayAthletes = role === 'parent' 
-        ? athletes.filter(a => parentAthletes.includes(a.id))
-        : athletes;
-        
-    if (filterType !== 'ทั้งหมด') {
-        displayAthletes = displayAthletes.filter(a => (a.classType || 'รอบปกติ') === filterType);
+    let filteredAllAthletes = athletes;
+    if (role === 'parent') {
+        filteredAllAthletes = athletes.filter(a => a.classType === 'รอบนักกีฬา');
+    } else if (filterType !== 'ทั้งหมด') {
+        filteredAllAthletes = athletes.filter(a => (a.classType || 'รอบปกติ') === filterType);
     }
 
-    const filterUI = (
+    let displayAthletes = role === 'parent' 
+        ? filteredAllAthletes.filter(a => parentAthletes.includes(a.id))
+        : filteredAllAthletes;
+
+    const filterUI = role === 'admin' ? (
         <div className="flex gap-2 overflow-x-auto pb-1 custom-scrollbar">
             {['ทั้งหมด', 'รอบปกติ', 'รอบนักกีฬา'].map(type => (
                 <button
@@ -39,7 +42,7 @@ function MainApp({ role, parentAthletes, athletes, setAthletes, instructors, set
                 </button>
             ))}
         </div>
-    );
+    ) : null;
 
     return (
         <div className="min-h-screen flex flex-col fade-in">
@@ -78,7 +81,7 @@ function MainApp({ role, parentAthletes, athletes, setAthletes, instructors, set
                             <div className="hidden md:flex items-center gap-2">
                                 <span className="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full border border-gray-200">
                                     <i className={`fa-solid ${role === 'admin' ? 'fa-user-shield' : 'fa-users'} mr-1.5 text-tkd-600`}></i>
-                                    {role === 'admin' ? 'Admin' : 'Parent'}
+                                    {userName || (role === 'admin' ? 'Admin' : 'Parent')}
                                 </span>
                             </div>
                             
@@ -108,7 +111,7 @@ function MainApp({ role, parentAthletes, athletes, setAthletes, instructors, set
                     <div className="md:hidden border-t border-tkd-100 bg-white slide-up absolute w-full shadow-lg rounded-b-2xl">
                         <div className="px-2 pt-2 pb-3 space-y-1">
                             <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-gray-50 mb-1">
-                                เข้าสู่ระบบในฐานะ: <span className="text-tkd-600">{role === 'admin' ? 'ผู้สอน (Admin)' : 'ผู้ปกครอง'}</span>
+                                เข้าสู่ระบบในฐานะ: <span className="text-tkd-600">{userName || (role === 'admin' ? 'ผู้สอน (Admin)' : 'ผู้ปกครอง')}</span>
                             </div>
                             {filteredNavItems.map(item => (
                                 <button
@@ -142,7 +145,7 @@ function MainApp({ role, parentAthletes, athletes, setAthletes, instructors, set
                         <AttendanceTab athletes={displayAthletes} setAthletes={setAthletes} filterUI={filterUI} instructors={instructors} setInstructors={setInstructors} onSave={onSave} fetchData={fetchData} />
                     )}
                     {activeTab === 'weight' && (
-                        <WeightTab athletes={displayAthletes} setAthletes={setAthletes} role={role} filterUI={filterUI} onSave={onSave} fetchData={fetchData} />
+                        <WeightTab athletes={filteredAllAthletes} parentAthletes={parentAthletes} setAthletes={setAthletes} role={role} fetchData={fetchData} />
                     )}
                     {activeTab === 'manage' && role === 'admin' && (
                         <ManageTab athletes={displayAthletes} setAthletes={setAthletes} instructors={instructors} filterUI={filterUI} fetchData={fetchData} />

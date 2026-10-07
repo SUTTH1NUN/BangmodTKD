@@ -1,0 +1,48 @@
+--- backend/routes/attendance.py
++++ backend/routes/attendance.py
+@@ -100,2 +100,43 @@
+     finally:
+         conn.close()
++
++@attendance_bp.route('/api/attendance/monthly_breakdown', methods=['GET'])
++def get_monthly_attendance_breakdown():
++    """Get daily attendance breakdown and summary for a month.
++    Query params: ?month=YYYY-MM
++    """
++    month_str = request.args.get('month')
++    if not month_str:
++        return jsonify({"error": "Missing 'month' query parameter"}), 400
++
++    conn = get_db()
++    try:
++        with conn.cursor() as cur:
++            cur.execute(
++                "SELECT date, person_type, person_id "
++                "FROM attendance "
++                "WHERE present=TRUE AND TO_CHAR(date, 'YYYY-MM')=%s "
++                "ORDER BY date",
++                (month_str,)
++            )
++            records = cur.fetchall()
++
++            daily = {}
++            summary = {"athletes": {}, "instructors": {}}
++            
++            for r in records:
++                d_str = r['date'].strftime('%Y-%m-%d')
++                ptype = r['person_type']
++                pid = r['person_id']
++                
++                if d_str not in daily:
++                    daily[d_str] = {"athletes": [], "instructors": []}
++                
++                if ptype == 'athlete':
++                    daily[d_str]["athletes"].append(pid)
++                    summary["athletes"][pid] = summary["athletes"].get(pid, 0) + 1
++                else:
++                    daily[d_str]["instructors"].append(pid)
++                    summary["instructors"][pid] = summary["instructors"].get(pid, 0) + 1
++
++        return jsonify({"daily": daily, "summary": summary})
++    finally:
++        conn.close()
