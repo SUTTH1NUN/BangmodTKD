@@ -12,7 +12,7 @@ const calculateAge = (dobString) => {
     return age;
 };
 
-function ManageTab({ athletes, setAthletes, filterUI, fetchData }) {
+function ManageTab({ athletes, setAthletes, instructors, filterUI, fetchData }) {
     const [isEditing, setIsEditing] = useState(false);
     const [currentAthlete, setCurrentAthlete] = useState(null);
     const [showModal, setShowModal] = useState(false);
@@ -86,6 +86,21 @@ function ManageTab({ athletes, setAthletes, filterUI, fetchData }) {
         }
     };
 
+    const handleDeleteInstructor = async (id) => {
+        if(window.confirm('คุณแน่ใจหรือไม่ที่จะลบผู้ฝึกสอนท่านนี้?')) {
+            try {
+                const res = await fetch(`/api/instructors/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    if (fetchData) fetchData();
+                } else {
+                    alert('ไม่สามารถลบข้อมูลได้');
+                }
+            } catch (err) {
+                alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+            }
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         
@@ -125,8 +140,8 @@ function ManageTab({ athletes, setAthletes, filterUI, fetchData }) {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-5 rounded-2xl shadow-sm border border-tkd-100 gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-800">จัดการข้อมูลนักกีฬา</h2>
-                    <p className="text-gray-500 text-sm mt-1">เพิ่ม แก้ไข หรือลบข้อมูลนักกีฬา</p>
+                    <h2 className="text-2xl font-bold text-gray-800">จัดการระบบ</h2>
+                    <p className="text-gray-500 text-sm mt-1">เพิ่ม แก้ไข หรือลบข้อมูลนักกีฬา และผู้ฝึกสอน</p>
                 </div>
                 <div className="flex flex-wrap gap-3">
                     <button 
@@ -148,6 +163,9 @@ function ManageTab({ athletes, setAthletes, filterUI, fetchData }) {
 
             {filterUI}
 
+            <div className="mt-6 mb-2">
+                <h3 className="text-xl font-bold text-gray-800 border-b pb-2">รายชื่อนักกีฬา</h3>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {athletes.map(athlete => (
                     <div key={athlete.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 athlete-card flex flex-col justify-between">
@@ -192,6 +210,30 @@ function ManageTab({ athletes, setAthletes, filterUI, fetchData }) {
                                 </button>
                             </div>
                         </div>
+                    </div>
+                ))}
+            </div>
+
+            <div className="mt-10 mb-2">
+                <h3 className="text-xl font-bold text-gray-800 border-b pb-2">รายชื่อผู้ฝึกสอน</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {instructors && instructors.map(instructor => (
+                    <div key={instructor.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-full bg-tkd-100 text-tkd-600 flex items-center justify-center font-bold text-lg border border-tkd-200">
+                                <i className="fa-solid fa-user-tie"></i>
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-lg text-gray-800">{instructor.name}</h3>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={() => handleDeleteInstructor(instructor.id)}
+                            className="w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition-colors"
+                        >
+                            <i className="fa-solid fa-trash text-xs"></i>
+                        </button>
                     </div>
                 ))}
             </div>

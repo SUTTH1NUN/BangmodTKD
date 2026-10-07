@@ -10,7 +10,7 @@ function MainApp({ role, parentAthletes, athletes, setAthletes, instructors, set
         { id: 'attendance', label: 'เช็คชื่อ', icon: 'fa-user-check', roles: ['admin'] },
         { id: 'weight', label: 'น้ำหนัก', icon: 'fa-weight-scale', roles: ['admin', 'parent'] },
         { id: 'summary', label: 'สรุป', icon: 'fa-chart-pie', roles: ['admin'] },
-        { id: 'manage', label: 'จัดการนักกีฬา', icon: 'fa-users-gear', roles: ['admin'] },
+        { id: 'manage', label: 'จัดการ', icon: 'fa-users-gear', roles: ['admin'] },
     ];
 
     const filteredNavItems = navItems.filter(item => item.roles.includes(role));
@@ -145,7 +145,7 @@ function MainApp({ role, parentAthletes, athletes, setAthletes, instructors, set
                         <WeightTab athletes={displayAthletes} setAthletes={setAthletes} role={role} filterUI={filterUI} onSave={onSave} fetchData={fetchData} />
                     )}
                     {activeTab === 'manage' && role === 'admin' && (
-                        <ManageTab athletes={displayAthletes} setAthletes={setAthletes} filterUI={filterUI} fetchData={fetchData} />
+                        <ManageTab athletes={displayAthletes} setAthletes={setAthletes} instructors={instructors} filterUI={filterUI} fetchData={fetchData} />
                     )}
                 </div>
             </main>
