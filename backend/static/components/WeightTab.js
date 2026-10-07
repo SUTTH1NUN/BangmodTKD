@@ -8,8 +8,8 @@ function WeightTab({ athletes, setAthletes, role, filterUI, fetchData }) {
 
     const handleSaveWeight = async () => {
         try {
-            // Update all athletes sequentially or in parallel
-            await Promise.all(athletes.filter(a => a.present).map(a => 
+            // Update all visible athletes
+            await Promise.all(athletes.filter(a => role === 'parent' || a.present).map(a => 
                 fetch(`/api/athletes/${a.id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -57,7 +57,7 @@ function WeightTab({ athletes, setAthletes, role, filterUI, fetchData }) {
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-100">
-                            {athletes.filter(a => a.present).map(athlete => (
+                            {athletes.filter(a => role === 'parent' || a.present).map(athlete => (
                                 <tr key={athlete.id} className="hover:bg-tkd-50 transition-colors">
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center">
@@ -87,10 +87,10 @@ function WeightTab({ athletes, setAthletes, role, filterUI, fetchData }) {
                                     </td>
                                 </tr>
                             ))}
-                            {athletes.filter(a => a.present).length === 0 && (
+                            {athletes.filter(a => role === 'parent' || a.present).length === 0 && (
                                 <tr>
                                     <td colSpan="2" className="px-6 py-8 text-center text-gray-500">
-                                        ยังไม่มีนักกีฬาที่เช็คชื่อในรอบนี้
+                                        {role === 'parent' ? 'ยังไม่มีรายชื่อนักกีฬาของคุณ' : 'ยังไม่มีนักกีฬาที่เช็คชื่อในรอบนี้'}
                                     </td>
                                 </tr>
                             )}
