@@ -3,6 +3,7 @@ const { useState, useEffect } = React;
 function App() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [role, setRole] = useState(null); // 'admin' or 'parent'
+    const [userName, setUserName] = useState(null);
     const [parentAthletes, setParentAthletes] = useState([]);
     const [athletes, setAthletes] = useState([]);
     const [instructors, setInstructors] = useState([]);
@@ -51,18 +52,21 @@ function App() {
             setIsLoggedIn(true);
             setRole(parsed.role);
             setParentAthletes(parsed.parentAthletes || []);
+            setUserName(parsed.userName || (parsed.role === 'admin' ? 'Admin' : 'Parent'));
         }
     }, []);
 
-    const handleLogin = (selectedRole, selectedAthletes, rememberMe) => {
+    const handleLogin = (selectedRole, selectedAthletes, rememberMe, nickname) => {
         setIsLoggedIn(true);
         setRole(selectedRole);
         setParentAthletes(selectedAthletes);
+        setUserName(nickname || (selectedRole === 'admin' ? 'Admin' : 'Parent'));
 
         if (rememberMe) {
             localStorage.setItem('tkd_auth', JSON.stringify({
                 role: selectedRole,
-                parentAthletes: selectedAthletes
+                parentAthletes: selectedAthletes,
+                userName: nickname || (selectedRole === 'admin' ? 'Admin' : 'Parent')
             }));
         } else {
             localStorage.removeItem('tkd_auth');
@@ -73,6 +77,7 @@ function App() {
         setIsLoggedIn(false);
         setRole(null);
         setParentAthletes([]);
+        setUserName(null);
         localStorage.removeItem('tkd_auth');
     };
 
@@ -91,6 +96,7 @@ function App() {
     return (
         <MainApp 
             role={role} 
+            userName={userName}
             parentAthletes={parentAthletes} 
             athletes={athletes} 
             setAthletes={setAthletes} 
@@ -103,6 +109,19 @@ function App() {
     );
 }
 const beltColors = ['White', 'Yellow', 'Green', 'Blue', 'Brown', 'Red', 'Black'];
+const getBeltScore = (beltStr) => {
+    if (!beltStr) return 0;
+    const parts = beltStr.split(' ');
+    const color = parts[0];
+    const level = parseInt(parts[1]) || 1;
+    const colorScores = { 'White': 100, 'Yellow': 200, 'Green': 300, 'Blue': 400, 'Brown': 500, 'Red': 600, 'Black': 700 };
+    return (colorScores[color] || 0) + level;
+};
+const getLocalDateString = () => {
+    const today = new Date();
+    const offset = today.getTimezoneOffset() * 60000;
+    return (new Date(today - offset)).toISOString().split('T')[0];
+};
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<App />);

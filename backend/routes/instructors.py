@@ -21,7 +21,9 @@ def list_instructors():
                 )
                 instructors.append({
                     'id': row['id'],
-                    'name': row['name'],
+                    'nickname': row['nickname'],
+                    'fullName': row['full_name'],
+                    'username': row['username'],
                     'attendanceCount': cur.fetchone()['cnt'],
                 })
 
@@ -33,18 +35,28 @@ def list_instructors():
 @instructors_bp.route('/api/instructors', methods=['POST'])
 def add_instructor():
     data = request.json
-    name = data.get('name', '').strip()
-    if not name:
-        return jsonify({"error": "Name is required"}), 400
+    nickname = data.get('nickname', '').strip()
+    full_name = data.get('fullName', '').strip()
+    username = data.get('username', '').strip()
+    password = data.get('password', '')
+    
+    if not nickname or not username or not password:
+        return jsonify({"error": "Nickname, username, and password are required"}), 400
 
     conn = get_db()
     try:
         with conn.cursor() as cur:
-            cur.execute("INSERT INTO instructors (name) VALUES (%s) RETURNING id", (name,))
+            cur.execute("""
+                INSERT INTO instructors (nickname, full_name, username, password)
+                VALUES (%s, %s, %s, %s) RETURNING id
+            """, (nickname, full_name, username, password))
             new_id = cur.fetchone()['id']
             conn.commit()
 
-        return jsonify({"id": new_id, "name": name, "attendanceCount": 0}), 201
+        return jsonify({"id": new_id, "nickname": nickname, "full_name": full_name, "username": username, "attendanceCount": 0}), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 400
     finally:
         conn.close()
 
@@ -60,3 +72,27 @@ def delete_instructor(instructor_id):
         return jsonify({"message": "Deleted"}), 200
     finally:
         conn.close()
+
+@instructors_bp.route('/api/login/admin', methods=['POST'])
+def login_admin():
+    data = request.json
+    username = data.get('username', '').strip()
+    password = data.get('password', '')
+    conn = get_db()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT id, nickname, username FROM instructors WHERE username=%s AND password=%s", (username, password))
+            user = cur.fetchone()
+            
+            if user:
+                return jsonify({
+                    "message": "Login successful", 
+                    "role": "admin", 
+                    "instructor_id": user['id'],
+                    "nickname": user['nickname']
+                }), 200
+            else:
+                return jsonify({"error": "Invalid username or password"}), 401
+    finally:
+        conn.close()
+

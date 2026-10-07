@@ -32,7 +32,10 @@ def init_db():
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS instructors (
                     id SERIAL PRIMARY KEY,
-                    name VARCHAR(100) NOT NULL
+                    nickname VARCHAR(100) NOT NULL,
+                    full_name VARCHAR(255) DEFAULT '',
+                    username VARCHAR(100) UNIQUE NOT NULL,
+                    password VARCHAR(255) NOT NULL
                 )
             """)
 
@@ -46,10 +49,31 @@ def init_db():
                     UNIQUE (person_id, person_type, date)
                 )
             """)
-
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS weight_history (
+                    id SERIAL PRIMARY KEY,
+                    athlete_id INT NOT NULL,
+                    date DATE NOT NULL,
+                    weight VARCHAR(20) NOT NULL,
+                    UNIQUE (athlete_id, date)
+                )
+            """)
 
 
         conn.commit()
+        
+        # Check if instructors table is empty, if so, seed an admin user
+        with conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) AS count FROM instructors")
+            res = cur.fetchone()
+            if res['count'] == 0:
+                cur.execute("""
+                    INSERT INTO instructors (nickname, full_name, username, password)
+                    VALUES ('Admin', 'System Administrator', 'admin', 'admin')
+                """)
+                conn.commit()
+                print("✅ Seeded default admin user (admin / admin)")
+                
         conn.close()
         print("✅ Database initialized successfully!")
     except Exception as e:
