@@ -164,6 +164,30 @@ function ManageTab({ athletes, setAthletes, instructors, filterUI, fetchData }) 
             {filterUI}
 
             <div className="mt-6 mb-2">
+                <h3 className="text-xl font-bold text-gray-800 border-b pb-2">รายชื่อผู้ฝึกสอน</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {instructors && instructors.map(instructor => (
+                    <div key={instructor.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-full bg-tkd-100 text-tkd-600 flex items-center justify-center font-bold text-lg border border-tkd-200">
+                                <i className="fa-solid fa-user-tie"></i>
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-lg text-gray-800">{instructor.name}</h3>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={() => handleDeleteInstructor(instructor.id)}
+                            className="w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition-colors"
+                        >
+                            <i className="fa-solid fa-trash text-xs"></i>
+                        </button>
+                    </div>
+                ))}
+            </div>
+
+            <div className="mt-10 mb-2">
                 <h3 className="text-xl font-bold text-gray-800 border-b pb-2">รายชื่อนักกีฬา</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -210,30 +234,6 @@ function ManageTab({ athletes, setAthletes, instructors, filterUI, fetchData }) 
                                 </button>
                             </div>
                         </div>
-                    </div>
-                ))}
-            </div>
-
-            <div className="mt-10 mb-2">
-                <h3 className="text-xl font-bold text-gray-800 border-b pb-2">รายชื่อผู้ฝึกสอน</h3>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {instructors && instructors.map(instructor => (
-                    <div key={instructor.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-full bg-tkd-100 text-tkd-600 flex items-center justify-center font-bold text-lg border border-tkd-200">
-                                <i className="fa-solid fa-user-tie"></i>
-                            </div>
-                            <div>
-                                <h3 className="font-bold text-lg text-gray-800">{instructor.name}</h3>
-                            </div>
-                        </div>
-                        <button 
-                            onClick={() => handleDeleteInstructor(instructor.id)}
-                            className="w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition-colors"
-                        >
-                            <i className="fa-solid fa-trash text-xs"></i>
-                        </button>
                     </div>
                 ))}
             </div>
