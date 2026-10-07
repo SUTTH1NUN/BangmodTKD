@@ -3,8 +3,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Vercel Postgres injects POSTGRES_URL
-POSTGRES_URL = os.getenv('POSTGRES_URL')
+# Vercel / Neon / Supabase injects POSTGRES_URL or DATABASE_URL
+POSTGRES_URL = os.getenv('POSTGRES_URL') or os.getenv('DATABASE_URL')
 
 # Flask settings
 PORT = int(os.getenv('PORT', 5000))
