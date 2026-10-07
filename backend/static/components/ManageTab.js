@@ -161,8 +161,6 @@ function ManageTab({ athletes, setAthletes, instructors, filterUI, fetchData }) 
                 </div>
             </div>
 
-            {filterUI}
-
             <div className="mt-6 mb-2">
                 <h3 className="text-xl font-bold text-gray-800 border-b pb-2">รายชื่อผู้ฝึกสอน</h3>
             </div>
@@ -187,7 +185,9 @@ function ManageTab({ athletes, setAthletes, instructors, filterUI, fetchData }) 
                 ))}
             </div>
 
-            <div className="mt-10 mb-2">
+            {filterUI}
+
+            <div className="mt-6 mb-2">
                 <h3 className="text-xl font-bold text-gray-800 border-b pb-2">รายชื่อนักกีฬา</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
