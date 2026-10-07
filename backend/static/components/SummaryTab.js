@@ -131,7 +131,7 @@ function SummaryTab({ allAthletes, filterUI, instructors: allInstructors }) {
                             รายเดือน
                         </button>
                     </div>
-                    <div className="w-[240px] flex justify-end hidden sm:flex">
+                    <div className="w-full sm:w-[240px] flex justify-start sm:justify-end mt-3 sm:mt-0">
                         {viewMode === 'daily' ? (
                             <div className="relative border border-gray-200 rounded-xl bg-gray-50 overflow-hidden focus-within:border-tkd-500 focus-within:ring-1 focus-within:ring-tkd-500 w-full max-w-[180px]">
                                 <input 

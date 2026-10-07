@@ -2,6 +2,13 @@
 // WEIGHT TAB
 // ----------------------------------------------------
 function WeightTab({ athletes, setAthletes, role, filterUI, fetchData }) {
+    const [selectedDate, setSelectedDate] = React.useState(() => {
+        const today = new Date();
+        const offset = today.getTimezoneOffset() * 60000;
+        return (new Date(today - offset)).toISOString().split('T')[0];
+    });
+
+
     const handleWeightChange = (id, newWeight) => {
         setAthletes(athletes.map(a => a.id === id ? { ...a, weight: newWeight } : a));
     };
@@ -9,11 +16,7 @@ function WeightTab({ athletes, setAthletes, role, filterUI, fetchData }) {
     React.useEffect(() => {
         const fetchTodayAttendance = async () => {
             try {
-                const today = new Date();
-                const offset = today.getTimezoneOffset() * 60000;
-                const localISOTime = (new Date(today - offset)).toISOString().split('T')[0];
-                
-                const res = await fetch(`/api/attendance?date=${localISOTime}`);
+                const res = await fetch(`/api/attendance?date=${selectedDate}`);
                 if (res.ok) {
                     const data = await res.json();
                     setAthletes(prevAthletes => prevAthletes.map(a => {
@@ -26,7 +29,7 @@ function WeightTab({ athletes, setAthletes, role, filterUI, fetchData }) {
             }
         };
         fetchTodayAttendance();
-    }, [setAthletes]);
+    }, [setAthletes, selectedDate]);
 
     const handleSaveWeight = async () => {
         try {
@@ -47,12 +50,22 @@ function WeightTab({ athletes, setAthletes, role, filterUI, fetchData }) {
 
     return (
         <div className="space-y-6">
-            <div className="bg-white p-5 rounded-2xl shadow-sm border border-tkd-100">
+            <div className="flex justify-between items-center bg-white p-5 rounded-2xl shadow-sm border border-tkd-100 flex-wrap gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-800">จัดการน้ำหนัก</h2>
                     <p className="text-gray-500 text-sm mt-1">
                         {role === 'admin' ? 'บันทึกน้ำหนักนักกีฬาทั้งหมด' : 'บันทึกน้ำหนักบุตรหลานของท่าน'}
                     </p>
+                </div>
+                <div className="flex items-center gap-4 w-full sm:w-auto mt-2 sm:mt-0">
+                    <div className="relative border border-gray-200 rounded-xl bg-gray-50 overflow-hidden focus-within:border-tkd-500 focus-within:ring-1 focus-within:ring-tkd-500 w-full sm:max-w-[180px]">
+                        <input 
+                            type="date" 
+                            value={selectedDate}
+                            onChange={(e) => setSelectedDate(e.target.value)}
+                            className="px-4 py-2 bg-transparent text-gray-700 focus:outline-none font-medium w-full cursor-pointer"
+                        />
+                    </div>
                 </div>
             </div>
 
