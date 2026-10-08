@@ -24,7 +24,7 @@ function LoginScreen({ onLogin, athletes }) {
                     });
                     if (res.ok) {
                         const data = await res.json();
-                        onLogin('admin', [], rememberMe, data.nickname);
+                        onLogin('admin', [], rememberMe, data.nickname, data.instructor_id);
                     } else {
                         setErrorMsg('Username หรือ Password ไม่ถูกต้อง');
                     }

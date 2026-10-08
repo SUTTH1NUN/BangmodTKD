@@ -12,12 +12,14 @@ const calculateAge = (dobString) => {
     return age;
 };
 
-function ManageTab({ athletes, setAthletes, instructors, filterUI, fetchData }) {
+function ManageTab({ athletes, setAthletes, instructors, instructorId, filterUI, fetchData }) {
     const [isEditing, setIsEditing] = useState(false);
     const [currentAthlete, setCurrentAthlete] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    const [saveStatus, setSaveStatus] = useState('idle');
 
     const [showInstructorModal, setShowInstructorModal] = useState(false);
+    const [instructorSaveStatus, setInstructorSaveStatus] = useState('idle');
 
     const getLevelsForColor = (color) => {
         if (color === 'Red') return ['1', '2', '3'];
@@ -48,6 +50,7 @@ function ManageTab({ athletes, setAthletes, instructors, filterUI, fetchData }) 
         }
         
         try {
+            setInstructorSaveStatus('saving');
             const url = isEditingInstructor ? `/api/instructors/${currentInstructorId}` : '/api/instructors';
             const method = isEditingInstructor ? 'PUT' : 'POST';
             
@@ -59,15 +62,20 @@ function ManageTab({ athletes, setAthletes, instructors, filterUI, fetchData }) 
             
             if (res.ok) {
                 if (fetchData) fetchData();
-                setShowInstructorModal(false);
-                setInstructorForm({ nickname: '', fullName: '', username: '', password: '' });
-                setIsEditingInstructor(false);
-                setCurrentInstructorId(null);
-                alert(isEditingInstructor ? 'แก้ไขข้อมูลสำเร็จ!' : 'เพิ่มผู้ฝึกสอนสำเร็จ!');
+                setInstructorSaveStatus('success');
+                setTimeout(() => {
+                    setShowInstructorModal(false);
+                    setInstructorForm({ nickname: '', fullName: '', username: '', password: '' });
+                    setIsEditingInstructor(false);
+                    setCurrentInstructorId(null);
+                    setInstructorSaveStatus('idle');
+                }, 1000);
             } else {
+                setInstructorSaveStatus('idle');
                 alert('ไม่สามารถบันทึกข้อมูลได้');
             }
         } catch (err) {
+            setInstructorSaveStatus('idle');
             alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
         }
     };
@@ -161,6 +169,7 @@ function ManageTab({ athletes, setAthletes, instructors, filterUI, fetchData }) 
         }
 
         try {
+            setSaveStatus('saving');
             let res;
             const submitData = { ...formData, beltColor: `${formData.beltColor} ${formData.beltLevel}` };
             delete submitData.beltLevel;
@@ -181,13 +190,19 @@ function ManageTab({ athletes, setAthletes, instructors, filterUI, fetchData }) 
 
             if (res.ok) {
                 if (fetchData) fetchData();
-                setShowModal(false);
+                setSaveStatus('success');
+                setTimeout(() => {
+                    setShowModal(false);
+                    setSaveStatus('idle');
+                }, 1000);
             } else {
+                setSaveStatus('idle');
                 const errorData = await res.json().catch(() => ({}));
                 alert(`ไม่สามารถบันทึกข้อมูลได้: ${errorData.error || res.statusText}`);
                 console.error("Backend error:", errorData);
             }
         } catch (err) {
+            setSaveStatus('idle');
             alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
         }
     };
@@ -234,20 +249,22 @@ function ManageTab({ athletes, setAthletes, instructors, filterUI, fetchData }) 
                                 {instructor.fullName && <p className="text-xs text-gray-500">{instructor.fullName}</p>}
                             </div>
                         </div>
-                        <div className="flex gap-2">
-                            <button 
-                                onClick={() => openEditInstructorModal(instructor)}
-                                className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center justify-center transition-colors"
-                            >
-                                <i className="fa-solid fa-pen text-xs"></i>
-                            </button>
-                            <button 
-                                onClick={() => handleDeleteInstructor(instructor.id)}
-                                className="w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition-colors"
-                            >
-                                <i className="fa-solid fa-trash text-xs"></i>
-                            </button>
-                        </div>
+                        {instructor.id === instructorId && (
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={() => openEditInstructorModal(instructor)}
+                                    className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center justify-center transition-colors"
+                                >
+                                    <i className="fa-solid fa-pen text-xs"></i>
+                                </button>
+                                <button 
+                                    onClick={() => handleDeleteInstructor(instructor.id)}
+                                    className="w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition-colors"
+                                >
+                                    <i className="fa-solid fa-trash text-xs"></i>
+                                </button>
+                            </div>
+                        )}
                     </div>
                 ))}
             </div>
@@ -390,9 +407,22 @@ function ManageTab({ athletes, setAthletes, instructors, filterUI, fetchData }) 
                                 </button>
                                 <button 
                                     type="submit"
-                                    className="flex-1 px-4 py-3 bg-tkd-600 text-white rounded-xl font-semibold hover:bg-tkd-700 shadow-lg shadow-tkd-500/30 transition-colors"
+                                    disabled={saveStatus !== 'idle'}
+                                    className={`flex-1 px-4 py-3 text-white rounded-xl font-semibold shadow-lg transition-colors ${
+                                        saveStatus === 'success' 
+                                            ? 'bg-green-500 hover:bg-green-600 shadow-green-500/30' 
+                                            : saveStatus === 'saving'
+                                                ? 'bg-gray-400 cursor-not-allowed shadow-none'
+                                                : 'bg-tkd-600 hover:bg-tkd-700 shadow-tkd-500/30'
+                                    }`}
                                 >
-                                    บันทึกข้อมูล
+                                    {saveStatus === 'success' ? (
+                                        <><i className="fa-solid fa-check mr-2"></i>บันทึกแล้ว</>
+                                    ) : saveStatus === 'saving' ? (
+                                        <><i className="fa-solid fa-circle-notch fa-spin mr-2"></i>กำลังบันทึก...</>
+                                    ) : (
+                                        'บันทึกข้อมูล'
+                                    )}
                                 </button>
                             </div>
                         </form>
@@ -469,9 +499,22 @@ function ManageTab({ athletes, setAthletes, instructors, filterUI, fetchData }) 
                                 </button>
                                 <button 
                                     type="submit"
-                                    className="flex-1 px-4 py-3 bg-tkd-600 text-white rounded-xl font-semibold hover:bg-tkd-700 shadow-lg shadow-tkd-500/30 transition-colors"
+                                    disabled={instructorSaveStatus !== 'idle'}
+                                    className={`flex-1 px-4 py-3 text-white rounded-xl font-semibold shadow-lg transition-colors ${
+                                        instructorSaveStatus === 'success' 
+                                            ? 'bg-green-500 hover:bg-green-600 shadow-green-500/30' 
+                                            : instructorSaveStatus === 'saving'
+                                                ? 'bg-gray-400 cursor-not-allowed shadow-none'
+                                                : 'bg-tkd-600 hover:bg-tkd-700 shadow-tkd-500/30'
+                                    }`}
                                 >
-                                    บันทึกข้อมูล
+                                    {instructorSaveStatus === 'success' ? (
+                                        <><i className="fa-solid fa-check mr-2"></i>บันทึกแล้ว</>
+                                    ) : instructorSaveStatus === 'saving' ? (
+                                        <><i className="fa-solid fa-circle-notch fa-spin mr-2"></i>กำลังบันทึก...</>
+                                    ) : (
+                                        'บันทึกข้อมูล'
+                                    )}
                                 </button>
                             </div>
                         </form>

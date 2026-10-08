@@ -1,7 +1,7 @@
 // ----------------------------------------------------
 // MAIN APP (DASHBOARD)
 // ----------------------------------------------------
-function MainApp({ role, userName, parentAthletes, athletes, setAthletes, instructors, setInstructors, onLogout, onSave, fetchData }) {
+function MainApp({ role, userName, instructorId, parentAthletes, athletes, setAthletes, instructors, setInstructors, onLogout, onSave, fetchData }) {
     const [activeTab, setActiveTab] = useState(role === 'parent' ? 'weight' : 'attendance');
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [filterType, setFilterType] = useState('ทั้งหมด');
@@ -148,7 +148,7 @@ function MainApp({ role, userName, parentAthletes, athletes, setAthletes, instru
                         <WeightTab athletes={filteredAllAthletes} parentAthletes={parentAthletes} setAthletes={setAthletes} role={role} fetchData={fetchData} />
                     )}
                     {activeTab === 'manage' && role === 'admin' && (
-                        <ManageTab athletes={displayAthletes} setAthletes={setAthletes} instructors={instructors} filterUI={filterUI} fetchData={fetchData} />
+                        <ManageTab athletes={displayAthletes} setAthletes={setAthletes} instructors={instructors} instructorId={instructorId} filterUI={filterUI} fetchData={fetchData} />
                     )}
                 </div>
             </main>

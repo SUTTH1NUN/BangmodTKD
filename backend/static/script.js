@@ -4,6 +4,7 @@ function App() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [role, setRole] = useState(null); // 'admin' or 'parent'
     const [userName, setUserName] = useState(null);
+    const [instructorId, setInstructorId] = useState(null);
     const [parentAthletes, setParentAthletes] = useState([]);
     const [athletes, setAthletes] = useState([]);
     const [instructors, setInstructors] = useState([]);
@@ -53,20 +54,23 @@ function App() {
             setRole(parsed.role);
             setParentAthletes(parsed.parentAthletes || []);
             setUserName(parsed.userName || (parsed.role === 'admin' ? 'Admin' : 'Parent'));
+            setInstructorId(parsed.instructorId || null);
         }
     }, []);
 
-    const handleLogin = (selectedRole, selectedAthletes, rememberMe, nickname) => {
+    const handleLogin = (selectedRole, selectedAthletes, rememberMe, nickname, instructor_id) => {
         setIsLoggedIn(true);
         setRole(selectedRole);
         setParentAthletes(selectedAthletes);
         setUserName(nickname || (selectedRole === 'admin' ? 'Admin' : 'Parent'));
+        setInstructorId(instructor_id || null);
 
         if (rememberMe) {
             localStorage.setItem('tkd_auth', JSON.stringify({
                 role: selectedRole,
                 parentAthletes: selectedAthletes,
-                userName: nickname || (selectedRole === 'admin' ? 'Admin' : 'Parent')
+                userName: nickname || (selectedRole === 'admin' ? 'Admin' : 'Parent'),
+                instructorId: instructor_id || null
             }));
         } else {
             localStorage.removeItem('tkd_auth');
@@ -78,6 +82,7 @@ function App() {
         setRole(null);
         setParentAthletes([]);
         setUserName(null);
+        setInstructorId(null);
         localStorage.removeItem('tkd_auth');
     };
 
@@ -97,6 +102,7 @@ function App() {
         <MainApp 
             role={role} 
             userName={userName}
+            instructorId={instructorId}
             parentAthletes={parentAthletes} 
             athletes={athletes} 
             setAthletes={setAthletes} 
