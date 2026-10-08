@@ -76,6 +76,9 @@ def add_athlete():
         result = _row_to_json(row)
         result['attendanceCount'] = 0
         return jsonify(result), 201
+    except Exception as e:
+        import traceback
+        return jsonify({"error": str(e), "traceback": traceback.format_exc()}), 500
     finally:
         conn.close()
 

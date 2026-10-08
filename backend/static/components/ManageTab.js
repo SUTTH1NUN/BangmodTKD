@@ -183,7 +183,9 @@ function ManageTab({ athletes, setAthletes, instructors, filterUI, fetchData }) 
                 if (fetchData) fetchData();
                 setShowModal(false);
             } else {
-                alert('ไม่สามารถบันทึกข้อมูลได้');
+                const errorData = await res.json().catch(() => ({}));
+                alert(`ไม่สามารถบันทึกข้อมูลได้: ${errorData.error || res.statusText}`);
+                console.error("Backend error:", errorData);
             }
         } catch (err) {
             alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
