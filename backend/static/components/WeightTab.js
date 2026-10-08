@@ -4,6 +4,7 @@
 function WeightTab({ athletes, parentAthletes, setAthletes, role, fetchData }) {
     const [selectedDate, setSelectedDate] = React.useState(getLocalDateString());
     const [activeMode, setActiveMode] = React.useState('entry'); // 'entry' or 'track'
+    const [saveStatus, setSaveStatus] = React.useState('idle');
 
     const canEdit = (id) => role === 'admin' || (parentAthletes && parentAthletes.includes(id));
 
@@ -42,20 +43,28 @@ function WeightTab({ athletes, parentAthletes, setAthletes, role, fetchData }) {
 
     const handleSaveWeight = async () => {
         try {
+            setSaveStatus('saving');
             const records = athletes.filter(a => a.present && a.weight && a.weight !== '0').map(a => ({
                 id: a.id,
                 weight: a.weight
             }));
             
-            await fetch('/api/weights', {
+            const res = await fetch('/api/weights', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ date: selectedDate, records })
             });
             
-            alert('บันทึกน้ำหนักสำเร็จ!');
-            if (fetchData) fetchData();
+            if (res.ok) {
+                setSaveStatus('success');
+                setTimeout(() => setSaveStatus('idle'), 1500);
+                if (fetchData) fetchData();
+            } else {
+                setSaveStatus('idle');
+                alert('ไม่สามารถบันทึกน้ำหนักได้');
+            }
         } catch (err) {
+            setSaveStatus('idle');
             alert('เกิดข้อผิดพลาดในการบันทึกน้ำหนัก');
         }
     };
@@ -107,10 +116,22 @@ function WeightTab({ athletes, parentAthletes, setAthletes, role, fetchData }) {
                 {activeMode === 'entry' && (
                     <button 
                         onClick={handleSaveWeight}
-                        className="bg-gradient-to-r from-tkd-600 to-tkd-500 hover:from-tkd-700 hover:to-tkd-600 text-white px-5 py-2.5 rounded-xl font-medium shadow-md shadow-tkd-500/20 transition-all flex items-center gap-2 transform hover:-translate-y-0.5 whitespace-nowrap ml-auto"
+                        disabled={saveStatus !== 'idle'}
+                        className={`px-5 py-2.5 rounded-xl font-medium shadow-md transition-all flex items-center gap-2 transform hover:-translate-y-0.5 whitespace-nowrap ml-auto ${
+                            saveStatus === 'success' 
+                                ? 'bg-green-500 hover:bg-green-600 text-white shadow-green-500/20' 
+                                : saveStatus === 'saving'
+                                    ? 'bg-gray-400 text-white cursor-not-allowed shadow-none'
+                                    : 'bg-gradient-to-r from-tkd-600 to-tkd-500 hover:from-tkd-700 hover:to-tkd-600 text-white shadow-tkd-500/20'
+                        }`}
                     >
-                        <i className="fa-solid fa-floppy-disk"></i>
-                        <span className="hidden sm:inline">บันทึกข้อมูล</span>
+                        {saveStatus === 'success' ? (
+                            <><i className="fa-solid fa-check"></i><span className="hidden sm:inline">บันทึกแล้ว</span></>
+                        ) : saveStatus === 'saving' ? (
+                            <><i className="fa-solid fa-circle-notch fa-spin"></i><span className="hidden sm:inline">กำลังบันทึก...</span></>
+                        ) : (
+                            <><i className="fa-solid fa-floppy-disk"></i><span className="hidden sm:inline">บันทึกข้อมูล</span></>
+                        )}
                     </button>
                 )}
             </div>
