@@ -10,7 +10,6 @@ JS_TO_DB = {
     'beltColor': 'belt_color',
     'birthDate': 'birth_date',
     'classType': 'class_type',
-    'weight': 'weight',
 }
 
 DB_TO_JS = {v: k for k, v in JS_TO_DB.items()}
@@ -25,7 +24,6 @@ def _row_to_json(row):
         'beltColor': row.get('belt_color', 'White'),
         'birthDate': row.get('birth_date', ''),
         'classType': row.get('class_type', 'รอบปกติ'),
-        'weight': row.get('weight', ''),
     }
 
 
@@ -60,15 +58,14 @@ def add_athlete():
     try:
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO athletes (nickname, full_name, belt_color, birth_date, class_type, weight) "
-                "VALUES (%s, %s, %s, %s, %s, %s) RETURNING id",
+                "INSERT INTO athletes (nickname, full_name, belt_color, birth_date, class_type) "
+                "VALUES (%s, %s, %s, %s, %s) RETURNING id",
                 (
                     data.get('nickname', ''),
                     data.get('fullName', ''),
                     data.get('beltColor', 'White'),
                     data.get('birthDate', ''),
                     data.get('classType', 'รอบปกติ'),
-                    data.get('weight', ''),
                 )
             )
             new_id = cur.fetchone()['id']

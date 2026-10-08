@@ -24,8 +24,7 @@ def init_db():
                     full_name VARCHAR(255) DEFAULT '',
                     belt_color VARCHAR(50) DEFAULT 'White',
                     birth_date VARCHAR(20) DEFAULT '',
-                    class_type VARCHAR(50) DEFAULT 'รอบปกติ',
-                    weight VARCHAR(20) DEFAULT ''
+                    class_type VARCHAR(50) DEFAULT 'รอบปกติ'
                 )
             """)
 
