@@ -35,28 +35,60 @@ function ManageTab({ athletes, setAthletes, instructors, filterUI, fetchData }) 
     });
 
     const [instructorForm, setInstructorForm] = useState({ nickname: '', fullName: '', username: '', password: '' });
+    const [isEditingInstructor, setIsEditingInstructor] = useState(false);
+    const [currentInstructorId, setCurrentInstructorId] = useState(null);
 
     const handleInstructorSubmit = async (e) => {
         e.preventDefault();
-        if (!instructorForm.nickname || !instructorForm.username || !instructorForm.password) return;
+        
+        if (isEditingInstructor) {
+            if (!instructorForm.nickname || !instructorForm.username) return;
+        } else {
+            if (!instructorForm.nickname || !instructorForm.username || !instructorForm.password) return;
+        }
         
         try {
-            const res = await fetch('/api/instructors', {
-                method: 'POST',
+            const url = isEditingInstructor ? `/api/instructors/${currentInstructorId}` : '/api/instructors';
+            const method = isEditingInstructor ? 'PUT' : 'POST';
+            
+            const res = await fetch(url, {
+                method: method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(instructorForm)
             });
+            
             if (res.ok) {
                 if (fetchData) fetchData();
                 setShowInstructorModal(false);
                 setInstructorForm({ nickname: '', fullName: '', username: '', password: '' });
-                alert('เพิ่มผู้ฝึกสอนสำเร็จ!');
+                setIsEditingInstructor(false);
+                setCurrentInstructorId(null);
+                alert(isEditingInstructor ? 'แก้ไขข้อมูลสำเร็จ!' : 'เพิ่มผู้ฝึกสอนสำเร็จ!');
             } else {
-                alert('ไม่สามารถเพิ่มผู้ฝึกสอนได้');
+                alert('ไม่สามารถบันทึกข้อมูลได้');
             }
         } catch (err) {
             alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
         }
+    };
+    
+    const openAddInstructorModal = () => {
+        setIsEditingInstructor(false);
+        setCurrentInstructorId(null);
+        setInstructorForm({ nickname: '', fullName: '', username: '', password: '' });
+        setShowInstructorModal(true);
+    };
+    
+    const openEditInstructorModal = (instructor) => {
+        setIsEditingInstructor(true);
+        setCurrentInstructorId(instructor.id);
+        setInstructorForm({ 
+            nickname: instructor.nickname || '', 
+            fullName: instructor.fullName || '', 
+            username: instructor.username || '', 
+            password: '' // Don't populate password
+        });
+        setShowInstructorModal(true);
     };
 
     const openAddModal = () => {
@@ -167,7 +199,7 @@ function ManageTab({ athletes, setAthletes, instructors, filterUI, fetchData }) 
                 </div>
                 <div className="flex flex-wrap gap-3">
                     <button 
-                        onClick={() => setShowInstructorModal(true)}
+                        onClick={() => openAddInstructorModal()}
                         className="bg-white hover:bg-tkd-50 border-2 border-tkd-100 text-tkd-700 px-5 py-2.5 rounded-xl font-medium shadow-sm transition-all flex items-center gap-2 transform hover:-translate-y-0.5"
                     >
                         <i className="fa-solid fa-user-tie"></i>
@@ -200,12 +232,20 @@ function ManageTab({ athletes, setAthletes, instructors, filterUI, fetchData }) 
                                 {instructor.fullName && <p className="text-xs text-gray-500">{instructor.fullName}</p>}
                             </div>
                         </div>
-                        <button 
-                            onClick={() => handleDeleteInstructor(instructor.id)}
-                            className="w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition-colors"
-                        >
-                            <i className="fa-solid fa-trash text-xs"></i>
-                        </button>
+                        <div className="flex gap-2">
+                            <button 
+                                onClick={() => openEditInstructorModal(instructor)}
+                                className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center justify-center transition-colors"
+                            >
+                                <i className="fa-solid fa-pen text-xs"></i>
+                            </button>
+                            <button 
+                                onClick={() => handleDeleteInstructor(instructor.id)}
+                                className="w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition-colors"
+                            >
+                                <i className="fa-solid fa-trash text-xs"></i>
+                            </button>
+                        </div>
                     </div>
                 ))}
             </div>
@@ -362,8 +402,8 @@ function ManageTab({ athletes, setAthletes, instructors, filterUI, fetchData }) 
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm fade-in">
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden slide-up border border-white">
                         <div className="bg-gradient-to-r from-tkd-600 to-tkd-500 p-6 text-white">
-                            <h3 className="text-xl font-bold">เพิ่มผู้ฝึกสอนใหม่</h3>
-                            <p className="text-tkd-100 text-sm mt-1">กรอกข้อมูลผู้สอนในระบบ</p>
+                            <h3 className="text-xl font-bold">{isEditingInstructor ? 'แก้ไขข้อมูลผู้ฝึกสอน' : 'เพิ่มผู้ฝึกสอนใหม่'}</h3>
+                            <p className="text-tkd-100 text-sm mt-1">{isEditingInstructor ? 'แก้ไขข้อมูลส่วนตัวและการล็อกอิน' : 'กรอกข้อมูลผู้สอนในระบบ'}</p>
                         </div>
                         
                         <form onSubmit={handleInstructorSubmit} className="p-6 space-y-4">
@@ -403,14 +443,16 @@ function ManageTab({ athletes, setAthletes, instructors, filterUI, fetchData }) 
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Password <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                    Password {!isEditingInstructor && <span className="text-red-500">*</span>}
+                                </label>
                                 <input 
                                     type="password" 
                                     value={instructorForm.password}
                                     onChange={(e) => setInstructorForm({...instructorForm, password: e.target.value})}
                                     className="w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 focus:border-tkd-500 focus:ring-0 transition-colors"
-                                    placeholder="รหัสผ่าน"
-                                    required
+                                    placeholder={isEditingInstructor ? 'ปล่อยว่างถ้าไม่ต้องการเปลี่ยนรหัสผ่าน' : 'รหัสผ่าน'}
+                                    required={!isEditingInstructor}
                                 />
                             </div>
 

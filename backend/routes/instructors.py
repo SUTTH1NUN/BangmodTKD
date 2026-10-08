@@ -61,6 +61,42 @@ def add_instructor():
         conn.close()
 
 
+@instructors_bp.route('/api/instructors/<int:instructor_id>', methods=['PUT'])
+def update_instructor(instructor_id):
+    data = request.json
+    nickname = data.get('nickname', '').strip()
+    full_name = data.get('fullName', '').strip()
+    username = data.get('username', '').strip()
+    password = data.get('password', '')
+    
+    if not nickname or not username:
+        return jsonify({"error": "Nickname and username are required"}), 400
+
+    conn = get_db()
+    try:
+        with conn.cursor() as cur:
+            if password:
+                cur.execute("""
+                    UPDATE instructors 
+                    SET nickname=%s, full_name=%s, username=%s, password=%s
+                    WHERE id=%s
+                """, (nickname, full_name, username, password, instructor_id))
+            else:
+                cur.execute("""
+                    UPDATE instructors 
+                    SET nickname=%s, full_name=%s, username=%s
+                    WHERE id=%s
+                """, (nickname, full_name, username, instructor_id))
+            conn.commit()
+
+        return jsonify({"message": "Updated successfully"}), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 400
+    finally:
+        conn.close()
+
+
 @instructors_bp.route('/api/instructors/<int:instructor_id>', methods=['DELETE'])
 def delete_instructor(instructor_id):
     conn = get_db()
