@@ -8,10 +8,14 @@ function WeightTrackTab({ athletes, parentAthletes, role }) {
     const chartRef = React.useRef(null);
     const chartInstance = React.useRef(null);
 
-    // Filter athletes based on role
-    const selectableAthletes = role === 'parent' 
-        ? athletes.filter(a => parentAthletes.includes(a.id))
-        : athletes;
+    // Filter and sort athletes based on role and belt color
+    const selectableAthletes = React.useMemo(() => {
+        let list = role === 'parent' 
+            ? athletes.filter(a => parentAthletes.includes(a.id))
+            : [...athletes];
+            
+        return list.sort((a, b) => getBeltScore(b.beltColor) - getBeltScore(a.beltColor));
+    }, [athletes, parentAthletes, role]);
 
     // Set initial selection
     React.useEffect(() => {
