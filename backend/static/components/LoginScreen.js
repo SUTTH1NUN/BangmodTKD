@@ -23,7 +23,8 @@ function LoginScreen({ onLogin, athletes }) {
                         body: JSON.stringify({ username, password })
                     });
                     if (res.ok) {
-                        onLogin('admin', [], rememberMe);
+                        const data = await res.json();
+                        onLogin('admin', [], rememberMe, data.nickname);
                     } else {
                         setErrorMsg('Username หรือ Password ไม่ถูกต้อง');
                     }
